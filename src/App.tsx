@@ -1,48 +1,28 @@
 import "bootstrap/dist/css/bootstrap.css";
 import "./index.css";
-import { AxiosError, CanceledError } from "./services/api-client";
-import { useEffect, useState } from "react";
+import useUsers from "./hooks/useUsers";
 import UserService, { User } from "./services/user-service";
 import userService from "./services/user-service";
 // import { AxiosError, CanceledError } from "axios";
 // import ProductList from "./components/ProductList";
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [error, setError] = useState("");
-  const [isLoading, setLoading] = useState(true);
-
+  const { users, isLoading, error, setError, setUsers } = useUsers();
   const deleteUser = (user: User) => {
     const orginalUsers = [...users];
     setUsers(users.filter((u) => u.id !== user.id));
-    UserService.deleteUser(user.id).catch((err) => {
+    UserService.delete(user.id).catch((err) => {
       setError(err.message);
       setUsers(orginalUsers);
       console.log(err);
     });
   };
 
-  useEffect(() => {
-    const { request, cancel } = UserService.getAllUsers();
-
-    request
-      .then((res) => setUsers(res.data))
-      .catch((err) => {
-        if (err instanceof CanceledError) return;
-        setError((err as AxiosError).message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    return () => cancel();
-  }, []);
-
   const addUser = () => {
     const newUser = { id: 0, name: "Fahim KP" };
     // const oldUsers = [...users
     userService
-      .addUser(newUser)
+      .create(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]));
 
     // setUsers([newUser, ...users]);
@@ -52,7 +32,7 @@ function App() {
     const orginalUsers = [...users];
     const updatedUser = { ...user, name: user.name + "8" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
-    UserService.updateUser(updatedUser).catch((err) => {
+    UserService.update(updatedUser).catch((err) => {
       setError(err.message);
       setUsers(orginalUsers);
     });
